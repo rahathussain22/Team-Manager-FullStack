@@ -1,5 +1,8 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database'); // Assuming you have a sequelize instance
+import { DataTypes,  } from 'sequelize';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import {sequelize} from '../db/connectdb.js';
+
 
 const User = sequelize.define('User', {
   name: {
@@ -24,7 +27,52 @@ const User = sequelize.define('User', {
     allowNull: true
   },
 }, {
-  timestamps: true
+  timestamps: true,
+  hooks: {
+    beforeCreate: async (user) => {
+      if (user.password) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+      }
+    },
+    beforeUpdate: async (user) => {
+      if (user.changed('password')) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+      }
+    }
+  }
 });
 
-module.exports = User;
+// ✅ Method to validate password
+User.prototype.isValidPassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
+
+//Method to generate Access token
+User.prototype.generateAccessToken = function () {
+  const token = jwt.sign(
+    { 
+      _id: this._id, 
+      email: this.email ,
+      name: this.name
+      
+    },
+    process.env.ACCESS_TOKEN ,
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY } // or '30d'
+  );
+  this.accesstoken = token;
+  return token;
+};
+// Method to generate refresh token
+User.prototype.generateRefreshToken = function () {
+  const token = jwt.sign(
+    { id: this.id, email: this.email },
+    process.env.REFRESH_TOKEN ,
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY } // or '30d'
+  );
+  this.refreshtoken = token;
+  return token;
+};
+
+export { User };

@@ -1,7 +1,6 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
-const User = require('./user');
-const Team = require('./team');
+import { DataTypes } from 'sequelize';
+const sequelize = require('../db/connectdb.js'); 
+
 
 const Task = sequelize.define('Task', {
   name: {
@@ -10,19 +9,23 @@ const Task = sequelize.define('Task', {
   },
   createdby: {
     type: DataTypes.INTEGER,
-    references: {
-      model: User,
-      key: 'id'
-    },
+    // references: {
+    //   model: User,
+    //   key: 'id'
+    // },
     allowNull: false
+  },
+  teamId:{
+    type:DataTypes.INTEGER,
+    allowNull: true
   },
   assignedTo: {
     type: DataTypes.INTEGER,
-    references: {
-      model: Team,
-      key: 'id'
-    },
-    allowNull: false
+    // references: {
+    //   model: Team,
+    //   key: 'id'
+    // },
+    allowNull: true
   },
   deadline: {
     type: DataTypes.DATE,
@@ -36,4 +39,4 @@ const Task = sequelize.define('Task', {
   timestamps: true,
 });
 
-module.exports = Task;
+export {Task}

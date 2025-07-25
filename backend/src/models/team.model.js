@@ -1,6 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
-const User = require('./user'); // Assuming User model is in this path
+import { DataTypes } from 'sequelize';
+const sequelize = require('../db/connectdb.js'); 
 
 const Team = sequelize.define('Team', {
   name: {
@@ -9,13 +8,9 @@ const Team = sequelize.define('Team', {
   },
   createdby: {
     type: DataTypes.INTEGER,
-    references: {
-      model: User,
-      key: 'id'
-    }
   }
 }, {
   timestamps: true,
 });
 
-module.exports = Team;
+export {Team}
