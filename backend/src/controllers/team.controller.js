@@ -2,12 +2,13 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { Team } from "../models/team.model.js"
 import { TeamMember } from "../models/teamMember.model.js";
 import options from "sequelize/lib/operators";
+import { APIError } from "../utils/apiError.js";
 
 
 const createTeam= asyncHandler( async (req, res)=>{
     const{name, createdBy}= req.body;
       if (!name || !createdBy) {
-        throw new ApiError(400, "provide all fields")
+        throw new APIError(400, "provide all fields")
     }
 
     const teamExist = await Team.findOne({ where: { name: name } })
@@ -27,9 +28,9 @@ const createTeam= asyncHandler( async (req, res)=>{
  })
 })
 const removeTeam = asyncHandler(async (req, res) => {
-  const { teamId } = req.body;
+  const { createdBy, teamId } = req.body;
   // Step 1: Validate input
-  if (!teamId) {
+  if (!teamId || !createdBy) {
     throw new APIError(400, "Please provide a teamId to delete");
   }
   // Step 2: Fetch the team instance
@@ -37,6 +38,9 @@ const removeTeam = asyncHandler(async (req, res) => {
 
   if (!team) {
     throw new APIError(404, "Team not found");
+  }
+  if(team.createdBy!=createdBy){
+    throw new APIError(403,"Only creator can Delete or Update team")
   }
   // Step 3: Destroy all team member records first (optional, based on your logic)
   await TeamMember.destroy({
