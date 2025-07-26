@@ -6,6 +6,11 @@ dotenv.config({
     path: "./env"
 })
 
+import { User } from "./models/user.model.js";
+import { Team } from "./models/team.model.js";
+import { Task } from "./models/task.model.js";
+import { TeamMember } from "./models/teamMember.model.js";
+import './models/models.relationships.js'
 async function startDB(){
    await connectdb()
    await sequelize.sync()

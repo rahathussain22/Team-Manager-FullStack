@@ -1,16 +1,27 @@
 import { DataTypes } from 'sequelize';
-const sequelize = require('../db/connectdb.js'); 
-
+import { sequelize } from '../db/connectdb.js';
+import { TeamMember } from './teamMember.model.js';
 const Team = sequelize.define('Team', {
   name: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  createdby: {
+  createdBy: {
     type: DataTypes.INTEGER,
   }
 }, {
   timestamps: true,
 });
 
-export {Team}
+Team.beforeDestroy(async (team, options) => {
+  await TeamMember.destroy(
+    {
+      where: {
+        teamId: team.id
+      },
+      transaction: options.transaction
+    }
+  )
+})
+
+export { Team }
