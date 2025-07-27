@@ -1,7 +1,7 @@
 import { Task } from "../models/task.model.js";
 import { APIError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
+import { User } from "../models/user.model.js";
 const createTask = asyncHandler(async (req, res) => {
 
     const { name, createdBy, deadline, assignedTo } = req.body;
@@ -95,4 +95,38 @@ const updateTask = asyncHandler(async (req, res) => {
         message: "Task Updated Successfully"
     })
 })
-export { createTask, deleteTask, updateTask, assignTask }
+
+const getAllTasks = asyncHandler(async (req, res)=>{
+    const{userId}=req.body
+    if(!userId){
+        throw new APIError(404,"no user Found")
+    }
+
+    const tasks= await User.findOne({
+        where: { id: userId },
+        include: [
+            {
+                model: Task,
+                as: 'totalCreatedTasks',
+            }
+        ]
+    })
+
+    const taskObj = tasks.toJSON()
+
+    delete taskObj.password;
+    delete taskObj.refreshtoken;
+
+    if(tasks.length == 0){
+        throw new APIError(404,"No Task found for this user")
+    }
+
+    res.status(200).json({
+        message: "success",
+        data: taskObj
+    })
+    
+
+}) 
+  
+export { createTask, deleteTask, updateTask, assignTask, getAllTasks }

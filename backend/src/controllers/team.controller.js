@@ -3,7 +3,7 @@ import { Team } from "../models/team.model.js"
 import { TeamMember } from "../models/teamMember.model.js";
 import options from "sequelize/lib/operators";
 import { APIError } from "../utils/apiError.js";
-
+import { User } from "../models/user.model.js";
 
 const createTeam= asyncHandler( async (req, res)=>{
     const{name, createdBy}= req.body;
@@ -14,7 +14,7 @@ const createTeam= asyncHandler( async (req, res)=>{
     const teamExist = await Team.findOne({ where: { name: name } })
 
     if (teamExist!=null) {
-        throw new ApiError(409, "Team already exist with this name")
+        throw new APIError(409, "Team already exist with this name")
     } 
      
    await Team.create({
@@ -55,5 +55,23 @@ const removeTeam = asyncHandler(async (req, res) => {
     message: "Team and its members deleted successfully"
   });
 });
-
-export {createTeam, removeTeam}
+const getAllTeams= asyncHandler(async (req, res)=>{
+  const {userId}=req.body
+  if(!userId){
+    throw new APIError(400, "No user Found")
+  }
+  const teams= await Team.findAll({
+        where: { createdBy: userId },
+        include: [
+            {
+                model: User,
+                as: 'owner'
+            }
+        ]
+    })
+    res.status(200).json({
+    message: "List of Teams successfully extracted",
+    data: teams
+  });
+})
+export {createTeam, removeTeam, getAllTeams}
