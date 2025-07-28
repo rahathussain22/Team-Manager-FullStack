@@ -1,14 +1,170 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios"; // Assuming axios is used for API requests
+import Sidebar from "./sidebar"; // Import Sidebar component
+import { createTeam } from "../services/teamService"; // Import the createTeam function
+import { API_URL } from "../Constants"; // Import the API URL
 
 const TeamsPage = () => {
+  const [teams, setTeams] = useState([]); // State to hold teams data
+  const [loading, setLoading] = useState(true); // Loading state
+  const [showCreateForm, setShowCreateForm] = useState(false); // State to toggle form visibility
+  const [teamName, setTeamName] = useState(""); // State to hold new team name
+  const [error, setError] = useState(""); // State to handle errors when creating a team
+
+  useEffect(() => {
+    // Assuming the user is already logged in and their ID is in localStorage
+    const loggedInUser = JSON.parse(localStorage.getItem("user"));
+
+    if (loggedInUser) {
+      const fetchTeams = async () => {
+        try {
+          const response = await axios.get(`${API_URL}/Team/getTeam`, {
+            params: { userId: loggedInUser.id },
+          });
+
+          setTeams(response.data.data); // Assuming response contains an array of teams
+        } catch (error) {
+          console.error("Error fetching teams:", error);
+          setError("An error occurred while fetching teams.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchTeams();
+    } else {
+      setLoading(false); // Stop loading if no user is found
+    }
+  }, []); // Run only once on component mount
+
+  const handleCreateTeam = async (e) => {
+    e.preventDefault();
+    const loggedInUser = JSON.parse(localStorage.getItem("user"));
+
+    if (teamName.trim() === "") {
+      setError("Team name is required.");
+      return;
+    }
+
+    // Parse the user ID as an integer
+    const userId = parseInt(loggedInUser.id, 10);
+
+    try {
+      // Use the createTeam function to make the API call, passing userId as integer
+      const response = await createTeam(teamName, userId);
+
+      // Log the response for debugging
+      console.log("API Response:", response);
+
+      setTeams((prevTeams => [...prevTeams, response.data.data]))
+      // setTeams([...teams, response.data.data]); // Add the new team to the list
+      setTeamName(""); // Reset the team name input field
+      setShowCreateForm(false); // Close the modal
+      setError(""); // Clear any previous errors
+    } catch (error) {
+      console.error("Error creating team:", error);
+
+      // Improved error handling
+      if (error.response) {
+        if (error.response.status === 409) {
+          setError("Team name already exists.");
+        } else if (error.response.status === 400) {
+          setError(error.response.data.message || "Invalid request.");
+        } else {
+          setError("An error occurred while creating the team.");
+        }
+      } else {
+        setError("Network error or server unreachable.");
+      }
+    }
+  };
+
+  // If data is still loading, show a loading message
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="bg-gray-100 h-screen flex flex-col justify-center items-center">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full text-center">
-        <h2 className="text-2xl font-bold text-gray-700 mb-6">Teams</h2>
-        <p className="text-lg text-gray-600">
-          This is the Teams page. Here you can manage your teams.
-        </p>
+    <div className="flex">
+      {/* Sidebar */}
+      <Sidebar />
+
+      {/* Main Content */}
+      <div className="w-3/4 p-8">
+        <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
+          <h2 className="text-2xl font-bold text-gray-700 mb-4">Teams</h2>
+          <p className="text-lg text-gray-600">
+            This is the Teams page. Here you can manage your teams.
+          </p>
+
+          {/* Create Team Button */}
+          <button
+            onClick={() => setShowCreateForm(true)} // Show modal when button is clicked
+            className="bg-blue-500 text-white px-4 py-2 rounded-md mb-6 hover:bg-blue-600 transition duration-300 ease-in-out"
+          >
+            Create New Team
+          </button>
+        </div>
+
+        {/* Teams Grid with Aesthetic Card Styling */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full px-4">
+          {teams && teams.length > 0 ? (
+            teams.map((team) => (
+              <div
+                key={team.id}
+                className="bg-white p-6 rounded-lg shadow-lg border-2 border-gray-200 hover:border-blue-500 hover:shadow-xl transition-all duration-300 ease-in-out cursor-pointer"
+              >
+                {/* Team Card Content */}
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">{team.name}</h3>
+                <p className="text-gray-600">Created By: {team.createdBy}</p>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-600">No teams found.</p>
+          )}
+        </div>
       </div>
+
+      {/* Modal for Creating Team */}
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Create New Team</h3>
+            {error && <p className="text-red-500 mb-4">{error}</p>}
+            <form onSubmit={handleCreateTeam}>
+              <div>
+                <label htmlFor="teamName" className="block text-sm font-medium text-gray-600">
+                  Team Name
+                </label>
+                <input
+                  type="text"
+                  id="teamName"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  className="w-full p-3 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter team name"
+                  required
+                />
+              </div>
+              <div className="mt-4 flex justify-between">
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                >
+                  Create Team
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateForm(false)} // Close the modal
+                  className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

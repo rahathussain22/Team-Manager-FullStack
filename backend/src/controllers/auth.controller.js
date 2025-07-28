@@ -3,6 +3,8 @@ import { APIError } from "../utils/apiError.js";
 import { User } from "../models/user.model.js";
 import { Op } from "sequelize";
 import bcrypt from "bcrypt";
+import { Task } from "../models/task.model.js";
+import { Team } from "../models/team.model.js";
 const registerUser = asyncHandler(async (req, res) => {
   const { name, phone, email, password } = req.body;
 
@@ -60,25 +62,25 @@ const loginUser = asyncHandler(async (req, res) => {
     }
   });
 
-  console.log("User found:", user); // Debugging log to check if the user is found
-
   if (!user) {
     throw new APIError(401, "Invalid email or password.");
   }
 
-  // // Trim spaces from the password input (just in case)
-  // const trimmedPassword = password.trim();
-
   // Compare the hashed password with the input password
   const isPasswordCorrect = await bcrypt.compare(password, user.password);
-
-  console.log("Password matches:", isPasswordCorrect); // Debugging line to check the comparison result
 
   if (!isPasswordCorrect) {
     throw new APIError(401, "Invalid email or password.");
   }
 
-  // If successful, return the user information (exclude the password)
+  // Fetch related data: tasks, teams, and active projects
+  const [tasks, teams, activeProjects] = await Promise.all([
+    Task.findAll({ where: { createdBy: user.id } }), // Get tasks created by the user
+    Team.findAll({ where: { createdBy: user.id } }), // Get teams created by the user
+    Task.findAll({ where: { createdBy: user.id, iscompleted: false } }) // Get active (in-progress) projects
+  ]);
+
+  // Respond with user data and aggregated information (tasks, teams, projects)
   res.status(200).json({
     success: true,
     message: "Login successful.",
@@ -88,6 +90,9 @@ const loginUser = asyncHandler(async (req, res) => {
       email: user.email,
       phone: user.phone
     },
+    tasks: tasks, // Return tasks created by the user
+    teams: teams, // Return teams created by the user
+    activeProjects: activeProjects // Return active projects
   });
 });
 

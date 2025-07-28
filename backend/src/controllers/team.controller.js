@@ -17,14 +17,15 @@ const createTeam= asyncHandler( async (req, res)=>{
         throw new APIError(409, "Team already exist with this name")
     } 
      
-   await Team.create({
+   const newTeam= await Team.create({
         name,
         createdBy: createdBy
     })
    
-   res.status(200).json({
-      status: "success",
-    message: "Team created"
+   res.status(201).json({
+    status: "success",
+    message: "Team created",
+    data: newTeam
  })
 })
 const removeTeam = asyncHandler(async (req, res) => {
@@ -55,23 +56,32 @@ const removeTeam = asyncHandler(async (req, res) => {
     message: "Team and its members deleted successfully"
   });
 });
-const getAllTeams= asyncHandler(async (req, res)=>{
-  const {userId}=req.body
-  if(!userId){
-    throw new APIError(400, "No user Found")
+const getAllTeams = asyncHandler(async (req, res) => {
+  const { userId } = req.query;  // Access userId from query parameters
+
+  if (!userId) {
+    throw new APIError(400, "No user found");
   }
-  const teams= await Team.findAll({
-        where: { createdBy: userId },
-        include: [
-            {
-                model: User,
-                as: 'owner'
-            }
-        ]
-    })
-    res.status(200).json({
+
+  // Fetch teams created by the user
+  const teams = await Team.findAll({
+    where: { createdBy: userId },
+    include: [
+      {
+        model: User,
+        as: 'owner',  // Assuming you have an 'owner' association for the User model
+      }
+    ]
+  });
+
+  if (!teams || teams.length === 0) {
+    return res.status(404).json({ message: "No teams found" });
+  }
+
+  res.status(200).json({
     message: "List of Teams successfully extracted",
     data: teams
   });
-})
+});
+
 export {createTeam, removeTeam, getAllTeams}

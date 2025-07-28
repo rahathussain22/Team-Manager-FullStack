@@ -99,7 +99,7 @@ const updateTask = asyncHandler(async (req, res) => {
 const getAllTasks = asyncHandler(async (req, res)=>{
     const{userId}=req.body
     if(!userId){
-        throw new APIError(404,"no user Found")
+        throw new APIError(400,"no user Found")
     }
 
     const tasks= await User.findOne({
@@ -111,6 +111,10 @@ const getAllTasks = asyncHandler(async (req, res)=>{
             }
         ]
     })
+
+    if(!tasks){
+        throw new APIError(404,"No User found with this id")
+    }
 
     const taskObj = tasks.toJSON()
 
@@ -128,5 +132,39 @@ const getAllTasks = asyncHandler(async (req, res)=>{
     
 
 }) 
+
+const getUncompletedTasks = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+
+    if (!userId) {
+        throw new APIError(400, "User ID missing");
+    }
+    const user = await User.findOne({
+        where: { id: userId },
+        include: [
+            {
+                model: Task,
+                as: 'totalCreatedTasks', 
+                where: { iscompleted: false }, 
+                attributes: ['id', 'name', 'assignedTo', 'createdBy', 'deadline', 'iscompleted'], // Specify the task details you want
+            }
+        ]
+    });
+
+    if (!user) {
+        throw new APIError(404, "No user found with this id");
+    }
+
+    // Extract the tasks from the user object
+    const userTasks = user.totalCreatedTasks;
+
+    if (userTasks.length === 0) {
+        throw new APIError(404, "No uncompleted tasks found for this user");
+    }
+    res.status(200).json({
+        message: "Success",
+        data: userTasks, 
+    });
+});
   
-export { createTask, deleteTask, updateTask, assignTask, getAllTasks }
+export { createTask, deleteTask, updateTask, assignTask, getAllTasks, getUncompletedTasks }
