@@ -13,7 +13,7 @@ const createTask = asyncHandler(async (req, res) => {
     await Task.create({
         name,
         createdBy,
-        assignedTo: assignedTo? assignedTo: null,
+        assignedTo: assignedTo ? assignedTo : null,
         deadline: new Date(deadline)
     });
 
@@ -51,11 +51,11 @@ const assignTask = asyncHandler(async (req, res) => {
     });
 });
 const deleteTask = asyncHandler(async (req, res) => {
-    const { taskId } = req.body;
+    const { taskId, userId } = req.body;
 
     // Step 1: Validate input
-    if (!taskId) {
-        throw new APIError(400, "Please provide task ID to delete");
+    if (!taskId || !userId) {
+        throw new APIError(400, "Please provide both taskId and userId");
     }
 
     // Step 2: Find the task by ID
@@ -65,14 +65,22 @@ const deleteTask = asyncHandler(async (req, res) => {
         throw new APIError(404, "Task not found");
     }
 
-    // Step 3: Destroy the task
+    // Step 3: Check if the requester is the creator
+    if (task.createdBy !== userId) {
+        throw new APIError(403, "Only the creator of the task can delete it");
+    }
+
+    // Step 4: Delete the task
     await task.destroy();
+
     res.status(200).json({
-        message: "task deleted successfully"
-    })
-})
+        message: "Task deleted successfully",
+    });
+});
+
+
 const updateTask = asyncHandler(async (req, res) => {
-       const { name, deadline, assignedTo, taskId } = req.body;
+    const { name, deadline, assignedTo, taskId } = req.body;
 
     if (!taskId) {
         throw new APIError(400, "Please provide task ID");
@@ -96,42 +104,43 @@ const updateTask = asyncHandler(async (req, res) => {
     })
 })
 
-const getAllTasks = asyncHandler(async (req, res)=>{
-    const{userId}=req.body
-    if(!userId){
-        throw new APIError(400,"no user Found")
+const getAllTasks = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+
+    if (!userId) {
+        throw new APIError(400, "User ID is required");
     }
 
-    const tasks= await User.findOne({
+    const userWithTasks = await User.findOne({
         where: { id: userId },
         include: [
             {
                 model: Task,
-                as: 'totalCreatedTasks',
+                as: 'totalCreatedTasks'
             }
         ]
-    })
+    });
 
-    if(!tasks){
-        throw new APIError(404,"No User found with this id")
+    if (!userWithTasks) {
+        throw new APIError(404, "User not found");
     }
 
-    const taskObj = tasks.toJSON()
+    const userObj = userWithTasks.toJSON();
 
-    delete taskObj.password;
-    delete taskObj.refreshtoken;
-
-    if(tasks.length == 0){
-        throw new APIError(404,"No Task found for this user")
+    if (userObj.totalCreatedTasks.length === 0) {
+        throw new APIError(404, "No tasks found for this user");
     }
+
+    // Optional: remove sensitive info
+    delete userObj.password;
+    delete userObj.refreshtoken;
 
     res.status(200).json({
-        message: "success",
-        data: taskObj
-    })
-    
+        message: "Success",
+        data: userObj.totalCreatedTasks
+    });
+});
 
-}) 
 
 const getUncompletedTasks = asyncHandler(async (req, res) => {
     const { userId } = req.params;
@@ -144,8 +153,8 @@ const getUncompletedTasks = asyncHandler(async (req, res) => {
         include: [
             {
                 model: Task,
-                as: 'totalCreatedTasks', 
-                where: { iscompleted: false }, 
+                as: 'totalCreatedTasks',
+                where: { iscompleted: false },
                 attributes: ['id', 'name', 'assignedTo', 'createdBy', 'deadline', 'iscompleted'], // Specify the task details you want
             }
         ]
@@ -163,8 +172,8 @@ const getUncompletedTasks = asyncHandler(async (req, res) => {
     }
     res.status(200).json({
         message: "Success",
-        data: userTasks, 
+        data: userTasks,
     });
 });
-  
+
 export { createTask, deleteTask, updateTask, assignTask, getAllTasks, getUncompletedTasks }

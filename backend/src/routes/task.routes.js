@@ -7,6 +7,6 @@ router.route("/createTask").post(createTask)
 router.route("/assignTask").post(assignTask)
 router.route("/deleteTask").post(deleteTask)
 router.route("/updateTask").post(updateTask)
-router.route("/getTask").post(getAllTasks)
+router.route("/getTask/:userId").get(getAllTasks)
 router.route("/getUncompletedTask/:userId").get(getUncompletedTasks)
 export default router

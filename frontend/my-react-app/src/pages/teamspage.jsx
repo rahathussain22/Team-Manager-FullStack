@@ -3,6 +3,7 @@ import axios from "axios"; // Assuming axios is used for API requests
 import Sidebar from "./sidebar"; // Import Sidebar component
 import { createTeam } from "../services/teamService"; // Import the createTeam function
 import { API_URL } from "../Constants"; // Import the API URL
+import { useNavigate } from "react-router-dom"; // For navigation
 
 const TeamsPage = () => {
   const [teams, setTeams] = useState([]); // State to hold teams data
@@ -13,6 +14,8 @@ const TeamsPage = () => {
 
   const [showSuccessModal, setShowSuccessModal] = useState(false); // New state for success modal
   const [successMessage, setSuccessMessage] = useState(""); // Success message
+
+  const navigate = useNavigate(); // Hook for navigation
 
   useEffect(() => {
     // Assuming the user is already logged in and their ID is in localStorage
@@ -56,18 +59,14 @@ const TeamsPage = () => {
       // Use the createTeam function to make the API call, passing userId as integer
       const response = await createTeam(teamName, userId);
 
-      // Log the response for debugging
-      console.log("API Response:", response);
-
       setTeams((prevTeams) => [...prevTeams, response.data.data]);
       setTeamName(""); // Reset the team name input field
       setShowCreateForm(false); // Close the modal
       setError(""); // Clear any previous errors
-      
+
       // Show success modal after the team is created
       setSuccessMessage(`Team "${response.data.data.name}" created successfully!`);
       setShowSuccessModal(true); // Show success modal
-
     } catch (error) {
       console.error("Error creating team:", error);
       // Improved error handling
@@ -85,6 +84,11 @@ const TeamsPage = () => {
     }
   };
 
+  const handleManageTeam = (teamId) => {
+    // Navigate to the manage team page
+    navigate(`/manageTeam/${teamId}`);
+  };
+
   // If data is still loading, show a loading message
   if (loading) {
     return <div>Loading...</div>;
@@ -98,23 +102,19 @@ const TeamsPage = () => {
       {/* Main Content */}
       <div className="w-3/4 p-8">
         <div className="bg-white p-8 rounded-xl shadow-xl mb-8">
-  <div className="flex justify-between items-center mb-4">
-    <h2 className="text-3xl font-semibold text-gray-800">Teams</h2>
-     <button
-      onClick={() => setShowCreateForm(true)} // Show modal when button is clicked
-      className="bg-blue-500 text-white px-5 py-2 rounded-md hover:bg-blue-600 transition-all duration-300 ease-in-out"
-    >
-      Create New Team
-    </button>
-  </div>
-  <p className="text-lg text-gray-600">
-    Manage your teams, collaborate with your team members, and stay on top of your projects.
-  </p>
-</div>
-
-
-
-
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-3xl font-semibold text-gray-800">Teams</h2>
+            <button
+              onClick={() => setShowCreateForm(true)} // Show modal when button is clicked
+              className="bg-teal-600 text-white px-5 py-2 rounded-md hover:bg-teal-700 transition-all duration-300 ease-in-out"
+            >
+              Create New Team
+            </button>
+          </div>
+          <p className="text-lg text-gray-600">
+            Manage your teams, collaborate with your team members, and stay on top of your projects.
+          </p>
+        </div>
 
         {/* Teams Grid with Aesthetic Card Styling */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full px-4">
@@ -127,6 +127,22 @@ const TeamsPage = () => {
                 {/* Team Card Content */}
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">{team.name}</h3>
                 <p className="text-gray-600">Created By: {team.createdBy}</p>
+
+                {/* View Team Button */}
+                <button
+                  onClick={() => handleManageTeam(team.id)} // Pass team id to navigate
+                  className="mt-4 bg-blue-500 text-white text-sm px-3 py-1 rounded-md hover:bg-blue-600 transition-all duration-300 ease-in-out mb-3"
+                >
+                  Manage Team
+                </button>
+
+                {/* Delete Team Button */}
+                <button
+                  onClick={() => handleDeleteTeam(team.id)}
+                  className="mt-4 bg-red-500 text-white text-sm px-3 py-1 rounded-md hover:bg-red-600 transition-all duration-300 ease-in-out"
+                >
+                  Delete Team
+                </button>
               </div>
             ))
           ) : (

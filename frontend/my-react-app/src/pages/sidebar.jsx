@@ -37,6 +37,12 @@ const Sidebar = () => {
             Teams
           </a>
         </li>
+        {/* Teams Link */}
+        <li className="mb-4">
+          <a href="/manageTeam" className={`transition duration-200 ${getLinkClass("/manageTeam")}`}>
+            Manage Team
+          </a>
+        </li>
         
         {/* Tasks Link */}
         <li className="mb-4">
