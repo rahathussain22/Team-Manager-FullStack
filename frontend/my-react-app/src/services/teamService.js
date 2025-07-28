@@ -24,3 +24,17 @@ export const getTeam = async()=>{
         return response
    
 }
+export const removeTeam = async (teamId) => {
+  try {
+    const loggedInUser = JSON.parse(localStorage.getItem("user"));
+    const requestBody = {
+      teamId,
+      createdBy: loggedInUser.id, // Send the user ID (the creator of the team)
+    };
+
+    const response = await axios.post(`${API_URL}/Team/removeTeam`, requestBody);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};

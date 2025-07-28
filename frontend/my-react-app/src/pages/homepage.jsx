@@ -9,11 +9,12 @@ const HomePage = () => {
   const [tasks, setTasks] = useState([]);
   const [teams, setTeams] = useState([]);
   const [activeProjects, setActiveProjects] = useState([]);
+  const [completedProjects, setCompletedProjects] = useState([])
   const [loading, setLoading] = useState(true); // Loading state
   const [showTasks, setShowTasks] = useState(false); // State to toggle task list visibility
   const [showTeams, setShowTeams] = useState(false); // State to toggle team list visibility
   const [showProjects, setShowProjects] = useState(false); // State to toggle projects list visibility
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if the user is logged in (i.e., user data exists in localStorage)
@@ -34,13 +35,23 @@ const HomePage = () => {
         try {
           // Assuming your API is set up to return data for tasks, teams, and active projects
           const tasksResponse = await getTask();
-          const teamsResponse =  await getTeam();
-          // const uncompletedTask= await getUncompletedTask()
-          console.info("Task Response: ",tasksResponse.data)
-          console.info("Teams Response: ",teamsResponse.data)
+          const teamsResponse = await getTeam();
+          // console.info("Task Response: ", tasksResponse.data)
+          const tasks = tasksResponse.data.data.totalCreatedTasks;
+          // console.log()
+          const activeTasks = tasks.filter((task) => {
+            return task.iscompleted === false; // Ensure proper boolean comparison
+          });
+
+          const completedTasks = tasks.filter((task) => {
+            return task.iscompleted === true; // Ensure proper boolean comparison
+          });
+          console.log("After filter, Active Tasks: ", activeTasks)
           setTasks(tasksResponse.data.data || []);
           setTeams(teamsResponse.data.data || []);
-          // setActiveProjects(uncompletedTask.data.data || [])
+
+          setActiveProjects(activeTasks || [])
+          setCompletedProjects(completedTasks || [])
         } catch (error) {
           console.error(error);
         } finally {
@@ -58,6 +69,7 @@ const HomePage = () => {
   const toggleTeams = () => setShowTeams(!showTeams);
   // Function to toggle projects visibility
   const toggleProjects = () => setShowProjects(!showProjects);
+  const toggleCompletedProjects = () => setCompletedProjects(!completedProjects);
 
   if (loading) {
     return <div>Loading...</div>; // Optionally show a loading message while fetching data
@@ -101,7 +113,7 @@ const HomePage = () => {
           className="bg-white p-6 rounded-lg shadow-lg cursor-pointer hover:bg-gray-100"
         >
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Active Projects</h3>
-          {/* <p className="text-3xl font-bold text-gray-800">{activeProjects.length}</p> */}
+          <p className="text-3xl font-bold text-gray-800">{activeProjects.length}</p>
         </div>
       </div>
 
@@ -138,7 +150,7 @@ const HomePage = () => {
       )}
 
       {/* Active Projects List */}
-      {/* {showProjects && (
+      {showProjects && (
         <div className="bg-white p-6 rounded-lg shadow-lg mt-6">
           <h3 className="text-2xl font-semibold text-gray-700 mb-4">Active Projects</h3>
           <ul className="space-y-4">
@@ -151,7 +163,22 @@ const HomePage = () => {
             )}
           </ul>
         </div>
-      )} */}
+      )}
+      {/* completed Projects List */}
+      {completedProjects && (
+        <div className="bg-white p-6 rounded-lg shadow-lg mt-6">
+          <h3 className="text-2xl font-semibold text-gray-700 mb-4">Completed Projects</h3>
+          <ul className="space-y-4">
+            {completedProjects.length > 0 ? (
+              completedProjects.map((project) => (
+                <li key={project.id} className="text-gray-600">{project.name}</li>
+              ))
+            ) : (
+              <li className="text-gray-600">No Completed projects found.</li>
+            )}
+          </ul>
+        </div>
+      )}
     </MainLayout>
   );
 };

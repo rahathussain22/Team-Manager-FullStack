@@ -11,6 +11,9 @@ const TeamsPage = () => {
   const [teamName, setTeamName] = useState(""); // State to hold new team name
   const [error, setError] = useState(""); // State to handle errors when creating a team
 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); // New state for success modal
+  const [successMessage, setSuccessMessage] = useState(""); // Success message
+
   useEffect(() => {
     // Assuming the user is already logged in and their ID is in localStorage
     const loggedInUser = JSON.parse(localStorage.getItem("user"));
@@ -56,14 +59,17 @@ const TeamsPage = () => {
       // Log the response for debugging
       console.log("API Response:", response);
 
-      setTeams((prevTeams => [...prevTeams, response.data.data]))
-      // setTeams([...teams, response.data.data]); // Add the new team to the list
+      setTeams((prevTeams) => [...prevTeams, response.data.data]);
       setTeamName(""); // Reset the team name input field
       setShowCreateForm(false); // Close the modal
       setError(""); // Clear any previous errors
+      
+      // Show success modal after the team is created
+      setSuccessMessage(`Team "${response.data.data.name}" created successfully!`);
+      setShowSuccessModal(true); // Show success modal
+
     } catch (error) {
       console.error("Error creating team:", error);
-
       // Improved error handling
       if (error.response) {
         if (error.response.status === 409) {
@@ -91,20 +97,24 @@ const TeamsPage = () => {
 
       {/* Main Content */}
       <div className="w-3/4 p-8">
-        <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
-          <h2 className="text-2xl font-bold text-gray-700 mb-4">Teams</h2>
-          <p className="text-lg text-gray-600">
-            This is the Teams page. Here you can manage your teams.
-          </p>
+        <div className="bg-white p-8 rounded-xl shadow-xl mb-8">
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-3xl font-semibold text-gray-800">Teams</h2>
+     <button
+      onClick={() => setShowCreateForm(true)} // Show modal when button is clicked
+      className="bg-blue-500 text-white px-5 py-2 rounded-md hover:bg-blue-600 transition-all duration-300 ease-in-out"
+    >
+      Create New Team
+    </button>
+  </div>
+  <p className="text-lg text-gray-600">
+    Manage your teams, collaborate with your team members, and stay on top of your projects.
+  </p>
+</div>
 
-          {/* Create Team Button */}
-          <button
-            onClick={() => setShowCreateForm(true)} // Show modal when button is clicked
-            className="bg-blue-500 text-white px-4 py-2 rounded-md mb-6 hover:bg-blue-600 transition duration-300 ease-in-out"
-          >
-            Create New Team
-          </button>
-        </div>
+
+
+
 
         {/* Teams Grid with Aesthetic Card Styling */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full px-4">
@@ -162,6 +172,21 @@ const TeamsPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">{successMessage}</h3>
+            <button
+              onClick={() => setShowSuccessModal(false)} // Close the success modal
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
