@@ -3,10 +3,8 @@ import { API_URL } from "../Constants"
 export const getTask = async () => {
 
     const loggedInUser = JSON.parse(localStorage.getItem("user"))
-    const requestBody = {
-        userId: loggedInUser.id
-    }
-    const response = await axios.post(`${API_URL}/Task/getTask`, requestBody)
+
+    const response = await axios.get(`${API_URL}/Task/getTask/${loggedInUser.id}`)
     return response
 
 }

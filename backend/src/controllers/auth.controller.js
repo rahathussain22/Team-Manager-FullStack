@@ -63,7 +63,7 @@ const loginUser = asyncHandler(async (req, res) => {
   });
 
   if (!user) {
-    throw new APIError(401, "Invalid email or password.");
+    throw new APIError(404, "User not found");
   }
 
   // Compare the hashed password with the input password

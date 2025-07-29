@@ -35,10 +35,9 @@ const HomePage = () => {
         try {
           // Assuming your API is set up to return data for tasks, teams, and active projects
           const tasksResponse = await getTask();
+          console.info("Task Response: ", tasksResponse.data)
           const teamsResponse = await getTeam();
-          // console.info("Task Response: ", tasksResponse.data)
-          const tasks = tasksResponse.data.data.totalCreatedTasks;
-          // console.log()
+          const tasks = tasksResponse.data.data;
           const activeTasks = tasks.filter((task) => {
             return task.iscompleted === false; // Ensure proper boolean comparison
           });
@@ -53,7 +52,7 @@ const HomePage = () => {
           setActiveProjects(activeTasks || [])
           setCompletedProjects(completedTasks || [])
         } catch (error) {
-          console.error(error);
+          console.log("error", error);
         } finally {
           setLoading(false);
         }
@@ -95,7 +94,7 @@ const HomePage = () => {
           className="bg-white p-6 rounded-lg shadow-lg cursor-pointer hover:bg-gray-100"
         >
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Total Tasks</h3>
-          <p className="text-3xl font-bold text-gray-800">{tasks.totalCreatedTasks.length}</p>
+          <p className="text-3xl font-bold text-gray-800">{tasks.length}</p>
         </div>
 
         {/* Card 2: Teams */}
