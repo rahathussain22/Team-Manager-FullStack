@@ -12,7 +12,19 @@ export const createTeam = async(name,createdBy)=>{
         throw error
     }
 }
-
+export const findTeam = async(teamId)=>{
+   const loggedInUser = JSON.parse( localStorage.getItem("user") )
+    try {
+        const requestBody = {
+            userId: loggedInUser.id,
+            teamId: teamId
+        }
+        const response = await axios.post(`${API_URL}/Team/findTeam`,requestBody)
+        return response
+    } catch (error) {
+        throw error
+    }
+}
 export const getTeam = async()=>{
     const loggedInUser = JSON.parse( localStorage.getItem("user") )
         const requestBody = {

@@ -66,4 +66,35 @@ const removeTeamMember = asyncHandler(async (req, res) => {
         message: "User removed from the team successfully"
     });
 });
-export { addTeamMember, removeTeamMember }
+
+const getMembers = asyncHandler(async (req, res)=>{
+    const{teamId}=req.params
+    if(!teamId){
+        throw new APIError(400,"Please provide team id")
+    }
+    const members= await TeamMember.findAll({
+        where:{
+            teamId:teamId
+        },
+        include: [
+            {
+                model: Team,
+                as: 'teamAssigned'
+            },
+            {
+                model: User,
+                as: 'member'
+            }
+        ]
+    })
+    if(!members){
+        throw new APIError(404, "No member Found in this team")
+    }
+    res.status(200).json({
+        message:"Members find successful",
+        data:members
+    })
+})
+
+
+export { addTeamMember, removeTeamMember, getMembers }

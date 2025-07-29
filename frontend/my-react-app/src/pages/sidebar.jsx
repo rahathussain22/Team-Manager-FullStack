@@ -17,33 +17,34 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-1/4 bg-blue-500 text-white p-4 h-screen flex flex-col">
+    <div className="w-1/4 bg-blue-500 text-white p-4 min-h-screen flex flex-col">
       {/* Centered Dashboard Text with Border */}
       <div className="flex items-center justify-center border-b-2 border-opacity-50 border-white py-4">
         <h2 className="text-xl font-semibold">Dashboard</h2>
       </div>
 
-      <ul className="mt-8">
+      <ul className="mt-8 flex-grow">
         {/* Home Link */}
         <li className="mb-4">
           <a href="/home" className={`transition duration-200 ${getLinkClass("/home")}`}>
             Home
           </a>
         </li>
-        
+
         {/* Teams Link */}
         <li className="mb-4">
           <a href="/teams" className={`transition duration-200 ${getLinkClass("/teams")}`}>
             Teams
           </a>
         </li>
-        {/* Teams Link */}
+        
+        {/* Manage Team Link */}
         <li className="mb-4">
           <a href="/manageTeam" className={`transition duration-200 ${getLinkClass("/manageTeam")}`}>
             Manage Team
           </a>
         </li>
-        
+
         {/* Tasks Link */}
         <li className="mb-4">
           <a href="/tasks" className={`transition duration-200 ${getLinkClass("/tasks")}`}>

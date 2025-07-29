@@ -13,6 +13,8 @@ app.use(express.json())
 app.use(cookieParser())
 
 //Routes
+import userRouter from "./routes/user.routes.js";
+app.use("/User", userRouter)
 import authRouter from "./routes/auth.routes.js";
 app.use("/Auth", authRouter);
 import teamRouter from "./routes/team.routes.js"

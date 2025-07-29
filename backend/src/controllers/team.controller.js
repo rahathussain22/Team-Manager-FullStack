@@ -84,4 +84,23 @@ const getAllTeams = asyncHandler(async (req, res) => {
   });
 });
 
-export {createTeam, removeTeam, getAllTeams}
+const findTeam= asyncHandler(async (req,res)=>{
+  const {userId,teamId}=req.body
+  if(!userId || !teamId){
+    throw new APIError(400, "please provide details")
+  }
+  const teamdata= await Team.findOne({
+    where: {
+      id: teamId
+    }
+  })
+  if(!teamdata){
+    throw new APIError(404, "No Data found for this team")
+  }
+  res.status(200).json({
+    message:"Team Find Successful",
+    data: teamdata
+  })
+})
+
+export {createTeam, removeTeam, getAllTeams, findTeam}
