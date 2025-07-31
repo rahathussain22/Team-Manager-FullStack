@@ -2,7 +2,7 @@ import { useState } from "react";
 import { login } from "../services/authService";  // Your login service
 import { ClipLoader } from "react-spinners";  // Spinner library
 import { useNavigate } from "react-router-dom";  // For navigating to Home Page
-
+import toast from "react-hot-toast";
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +22,7 @@ const LoginPage = () => {
       navigate("/home");
     } catch (error) {
       if (error.status === 401) {
-        alert("Invalid username or password");
+        toast.error("Invalid username or password");
       }
       console.error("Error during login: ", error);
     } finally {
@@ -89,7 +89,7 @@ const LoginPage = () => {
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{" "}
-            <a href="/register" className="text-blue-500 hover:underline">
+            <a href="/signup" className="text-blue-500 hover:underline">
               Sign Up
             </a>
           </p>

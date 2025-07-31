@@ -42,7 +42,19 @@ export const deleteTask = async (taskId) => {
 
 
 }
-
+export const assignTask=async (taskId, teamId)=>{
+    const requestBody= {
+        taskId:taskId,
+        teamId:teamId
+    }
+    try {
+         const response= await axios.post(`${API_URL}/Task/assignTask`,requestBody)
+         return response
+    } catch (error) {
+        console.log("Error", error)
+    }
+   
+}
 export const getAllTasks = async () => {
 
     try {

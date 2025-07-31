@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios"; // Assuming axios is used for API requests
 import Sidebar from "./sidebar"; // Import Sidebar component
-import { createTeam } from "../services/teamService"; // Import the createTeam function
+import { createTeam, removeTeam } from "../services/teamService"; // Import the createTeam function
 import { API_URL } from "../Constants"; // Import the API URL
 import { useNavigate } from "react-router-dom"; // For navigation
+import { getAllTasks } from "../services/taskService";
+import toast from "react-hot-toast";
 
 const TeamsPage = () => {
 
@@ -12,24 +14,12 @@ const TeamsPage = () => {
   const [showCreateForm, setShowCreateForm] = useState(false); // State to toggle form visibility
   const [teamName, setTeamName] = useState(""); // State to hold new team name
   const [error, setError] = useState(""); // State to handle errors when creating a team
-  const [tasks, setTasks]= useState([])
+  
   const [showSuccessModal, setShowSuccessModal] = useState(false); // New state for success modal
   const [successMessage, setSuccessMessage] = useState(""); // Success message
 
   const navigate = useNavigate(); // Hook for navigation
- async function getTasks() {
-    try {
-      const response = await getAllTasks()
-
-      setTasks(response.data.data)
-      console.log("Response for Tasks: ", response.data.data)
-    } catch (error) {
-      if (error.status == 404) {
-        toast.error("No Tasks Created by this user")
-      }
-    }
-
-  }
+ 
   useEffect(() => {
     // Assuming the user is already logged in and their ID is in localStorage
     const loggedInUser = JSON.parse(localStorage.getItem("user"));
@@ -51,7 +41,7 @@ const TeamsPage = () => {
       };
 
       fetchTeams();
-    
+     
     } else {
       setLoading(false); // Stop loading if no user is found
     }
@@ -97,6 +87,16 @@ const TeamsPage = () => {
       }
     }
   };
+const handleDeleteTeam = async (teamId)=>{
+  try{
+    await removeTeam(teamId)
+    toast.success("Team Deleted Successfully")
+     const filterTeam = teams.filter((team)=>team.id !== teamId)
+     setTeams(filterTeam)
+  } catch (error) {
+    toast.error("Error in deleting team")
+  }
+}
 
   const handleManageTeam = (teamId) => {
     // Navigate to the manage team page

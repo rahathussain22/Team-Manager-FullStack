@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { register } from "../services/authService";  // Assuming you have a `register` function in your `authService`
 import { ClipLoader } from "react-spinners";  // Importing the ClipLoader spinner
-
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 const RegisterPage = () => {
   const [name, setName] = useState("");  // State for name input (string)
   const [phone, setPhone] = useState("");  // State for phone input (string)
   const [email, setEmail] = useState("");  // State for email input (string)
   const [password, setPassword] = useState("");  // State for password input (string)
   const [loading, setLoading] = useState(false);  // State for handling loading spinner
-
+  const navigate = useNavigate()
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);  // Start loading spinner
@@ -17,10 +18,12 @@ const RegisterPage = () => {
       const data = response.data;
       const user = data.user;
       localStorage.setItem("user", JSON.stringify(user));
-      alert("Registration Successful");  // You can redirect to the login page after success if needed
+      toast.success("Registration Successful");
+      navigate("/login")
+        // You can redirect to the login page after success if needed
     } catch (error) {
       console.error("Error during registration: ", error);
-      alert("Registration failed. Please try again.");
+      toast.error("Registration failed. Please try again.");
     } finally {
       setLoading(false);  // Stop loading spinner
     }
