@@ -24,7 +24,7 @@ export const removeMember = async (userId) => {
             userId: userId,
            
         }
-        const response = await axios.post(`${API_URL}/ManageTeam/removeTeammMember`, requestBody)
+        const response = await axios.post(`${API_URL}/ManageTeam/removeTeamMember`, requestBody)
         return response
     } catch (error) {
         throw error

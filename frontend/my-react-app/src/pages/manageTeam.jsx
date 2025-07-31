@@ -5,8 +5,11 @@ import Sidebar from "./sidebar"; // Import Sidebar component
 import { findTeam } from "../services/teamService";
 import { addMember, getMember, removeMember } from "../services/manageTeam";
 import { getUsers } from "../services/userService";
+import { getAllTasks } from "../services/taskService";
 
 const ManageTeamPage = () => {
+  const [selectedMemberId, setSelectedMemberId] = useState(null);
+  const [tasks, setTasks]= useState([])
   const { teamId } = useParams(); // Get teamId from URL parameters
   const [team, setTeam] = useState({}); // State for team details
   const [members, setMembers] = useState([]); // State for team members
@@ -43,6 +46,7 @@ const ManageTeamPage = () => {
         }
       };
       fetchTeamData();
+      getAllTasks()
     } else {
       setNoTeamSelected(true);
       setLoading(false);
@@ -54,54 +58,63 @@ const ManageTeamPage = () => {
   }
 
   // Handle adding a member (send userId, teamId, and selected role)
-const handleAddMember = async (userId, teamId, role) => {
-  console.log("Adding member with User ID:", userId, "Role:", role);
-  
-  try {
-    // Call the addMember function (API call) to add the member
-    const addingMember = await addMember(userId, teamId, role);
+  const handleAddMember = async (userId, teamId, role) => {
+    console.log("Adding member with User ID:", userId, "Role:", role);
 
-    // Check the HTTP status code from the response
-    const status = addingMember.status;
+    try {
+      // Call the addMember function (API call) to add the member
+      const addingMember = await addMember(userId, teamId, role);
 
-    if (status === 201) {
-      // If successful (201), update the members list by adding the new member
-      if (addingMember.data && addingMember.data.teamMember) {
-        setMembers((prevMembers) => [...prevMembers, addingMember.data.teamMember]);
+      // Check the HTTP status code from the response
+      const status = addingMember.status;
+
+      if (status === 201) {
+
+        const memberResponse = await getMember(teamId);
+        setMembers(memberResponse.data.data);
         console.log("Member added successfully:", addingMember.data.teamMember);
+      } else if (status === 400) {
+        // Handle 400 Bad Request
+        console.error("Bad Request: Please provide all the required fields (userId, teamId, role).");
+      } else if (status === 404) {
+        // Handle 404 Not Found
+        console.error("User not found.");
+      } else if (status === 409) {
+        // Handle 409 Conflict (User already in a team)
+        console.error("Conflict: User is already a member of a team.");
       } else {
-        console.error("Failed to add member: No member data returned");
+        // Handle other status codes or unexpected errors
+        console.error("Unexpected error:", addingMember.data.message);
       }
-    } else if (status === 400) {
-      // Handle 400 Bad Request
-      console.error("Bad Request: Please provide all the required fields (userId, teamId, role).");
-    } else if (status === 404) {
-      // Handle 404 Not Found
-      console.error("User not found.");
-    } else if (status === 409) {
-      // Handle 409 Conflict (User already in a team)
-      console.error("Conflict: User is already a member of a team.");
-    } else {
-      // Handle other status codes or unexpected errors
-      console.error("Unexpected error:", addingMember.data.message);
+
+      // Close the modal after adding or showing error
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error adding member:", error);
+      // Optionally, display an error message to the user
+      alert("Error adding Member in a Team.");
     }
+  };
 
-    // Close the modal after adding or showing error
-    setIsModalOpen(false);
-  } catch (error) {
-    console.error("Error adding member:", error);
-    // Optionally, display an error message to the user
-    alert("user is Already in a Team.");
-  }
-};
+  const handleDeleteMember = async (userId) => {
+    try {
+      const response = await removeMember(userId);
 
-const handleDeleteMember= async(userId)=>{
-  try {
-    await removeMember(userId)
-  } catch (error) {
-    
-  }
-}
+      if (response.status === 200) {
+        // Filter out the deleted member from the state
+        setMembers((prevMembers) =>
+          prevMembers.filter((member) => member.member.id !== userId)
+        );
+        console.log("Member deleted successfully");
+      } else {
+        console.error("Failed to delete member:", response.status);
+      }
+    } catch (error) {
+      console.error("Error deleting member:", error);
+      alert("Failed to delete member. Please try again.");
+    }
+  };
+
 
   return (
     <div className="flex">
@@ -115,8 +128,25 @@ const handleDeleteMember= async(userId)=>{
           <>
             <h1 className="text-3xl font-semibold text-gray-800 mb-6 text-center">Manage Team</h1>
 
-            <div className="bg-white p-6 rounded-lg shadow-lg mb-8 space-y-4">
-              <h3 className="text-2xl font-semibold text-gray-700 mb-4 text-center">Team Details</h3>
+            <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-2xl font-semibold text-gray-700">Team Details</h3>
+                <div className="flex space-x-4">
+                  <button
+                    className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition-all duration-300"
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    Add New Member
+                  </button>
+                  <button
+                    className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-all duration-300"
+                    onClick={() => console.log("Assign Task clicked")}
+                  >
+                    Assign Task
+                  </button>
+                </div>
+              </div>
+
               <span className="text-xl font-semibold text-blue-600 p-2 block mb-2">
                 Team Name: {team.name}
               </span>
@@ -128,18 +158,26 @@ const handleDeleteMember= async(userId)=>{
               </span>
             </div>
 
+
+
+
             <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
               <h3 className="text-2xl font-semibold text-gray-700 mb-4 text-center">Team Members</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
                 {members.map((member) => (
-                  <div key={member.id} className="bg-white rounded-lg shadow-lg p-6 flex flex-col space-y-4">
+                  <div key={member.id}
+                    onClick={() => setSelectedMemberId(member.member.id)}
+                    className={`bg-white rounded-lg shadow-lg p-6 flex flex-col space-y-4 cursor-pointer transition-all duration-200 ${selectedMemberId === member.member.id
+                        ? "border-2 border-blue-500 scale-105"
+                        : ""
+                      }`}>
                     <span className="text-xl font-semibold text-gray-800">Member Id: {member.member.id}</span>
                     <span className="text-lg text-blue-600">Name: {member.member.name}</span>
                     <span className="text-lg text-blue-600">Email: {member.member.email}</span>
                     <span className="text-lg text-blue-600">Phone: {member.member.phone}</span>
                     <span className="text-lg text-blue-600">Role: {member.role}</span>
                     <div className="mt-auto">
-                      <button className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-all duration-300 w-full" onClick={()=>handleDeleteMember(member.member.id)}>
+                      <button className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-all duration-300 w-full" onClick={() => handleDeleteMember(member.member.id)}>
                         Delete
                       </button>
                     </div>

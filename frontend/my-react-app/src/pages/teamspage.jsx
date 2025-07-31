@@ -6,17 +6,30 @@ import { API_URL } from "../Constants"; // Import the API URL
 import { useNavigate } from "react-router-dom"; // For navigation
 
 const TeamsPage = () => {
+
   const [teams, setTeams] = useState([]); // State to hold teams data
   const [loading, setLoading] = useState(true); // Loading state
   const [showCreateForm, setShowCreateForm] = useState(false); // State to toggle form visibility
   const [teamName, setTeamName] = useState(""); // State to hold new team name
   const [error, setError] = useState(""); // State to handle errors when creating a team
-
+  const [tasks, setTasks]= useState([])
   const [showSuccessModal, setShowSuccessModal] = useState(false); // New state for success modal
   const [successMessage, setSuccessMessage] = useState(""); // Success message
 
   const navigate = useNavigate(); // Hook for navigation
+ async function getTasks() {
+    try {
+      const response = await getAllTasks()
 
+      setTasks(response.data.data)
+      console.log("Response for Tasks: ", response.data.data)
+    } catch (error) {
+      if (error.status == 404) {
+        toast.error("No Tasks Created by this user")
+      }
+    }
+
+  }
   useEffect(() => {
     // Assuming the user is already logged in and their ID is in localStorage
     const loggedInUser = JSON.parse(localStorage.getItem("user"));
@@ -38,6 +51,7 @@ const TeamsPage = () => {
       };
 
       fetchTeams();
+    
     } else {
       setLoading(false); // Stop loading if no user is found
     }

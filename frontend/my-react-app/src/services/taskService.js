@@ -28,10 +28,10 @@ export const createTask = async (name, deadline) => {
 export const deleteTask = async (taskId) => {
 
     try {
-        const loggedInUser = JSON.parse(localStorage.getItem("user"))
+         const loggedInUser = JSON.parse( localStorage.getItem("user") )
         const requestBody = {
             taskId: taskId,
-            createdBy: loggedInUser.id,
+            userId: loggedInUser.id,
 
         }
         const response = await axios.post(`${API_URL}/Task/deleteTask`, requestBody)
