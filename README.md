@@ -1,11 +1,10 @@
-# git clone https://github.com/rahathussain22/Team-Manager-FullStack
-# cd ASSESSMENT
+git clone https://github.com/rahathussain22/Team-Manager-FullStack
 cd backend
 
 # Install dependencies
 npm install
 
-# Configure environment variables in .env
+#Configure environment variables in .env
 PORT=8000
 REFRESH_TOKEN=ItsmyRefreshToken
 REFRESH_TOKEN_EXPIRY=30d
